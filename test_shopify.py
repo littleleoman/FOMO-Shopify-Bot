@@ -3,7 +3,7 @@
 @author: yung_messiah
 
 '''
-import shopify_atc 
+import shopify_atc
 
 ''' Unit tests for the shopify ATC bot.
     
