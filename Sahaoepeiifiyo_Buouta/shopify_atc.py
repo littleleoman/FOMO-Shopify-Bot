@@ -13,22 +13,29 @@ import re
     @param url: The url passed by the user pointing to the item he/she wants ''' 
 def get_sizes(url):
     headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'}
-    #url = "https://kith.com/collections/footwear/products/nkaq0996-001"
-    
+
     # Ensure url starts with https:// in case url only contains www....
     url_formatting = re.match('https://', url)
     if url_formatting == None:
         url = 'https://' + url
-    
-    raw_HTML = requests.get(url, headers=headers, timeout=5)
-    if raw_HTML.status_code != 200:
-        print("An error has occured completing your request")
-        return False
-    else:
-        page = bs4.BeautifulSoup(raw_HTML.text, 'lxml')
-    
-        print(page.title.string)
-        get_size_variant(url, page)
+    try:
+        raw_HTML = requests.get(url, headers=headers, timeout=5)
+        if raw_HTML.status_code != 200:
+            print("An error has occured completing your request")
+            return False
+        else:
+            page = bs4.BeautifulSoup(raw_HTML.text, 'lxml')
+            print(page.title.string)
+            get_size_variant(url, page)
+    except requests.Timeout as error:
+        print("There was a timeout error")
+        print(str(error))
+    except requests.ConnectionError as error:
+        print("A connection error has occured. Make sure you are connected to the Internet. The details are below.\n")
+        print(str(error))
+    except requests.RequestException as error:
+        print("An error occured making the internet request.")
+        print(str(error))
         
 ''' Retrieves only the absolute URL from passed in URL.
 
@@ -132,4 +139,3 @@ def find_variant_script(scripts):
             break
             
 
-# run("https://rockcitykicks.com/products/born-x-raised-snooty-fox-t-shirt-white")
