@@ -4,9 +4,9 @@
 
 '''
 
-import shopify_bot
+from Sahaoepeiifiyo_Buouta import shopify_bot
 
-''' Unit tests for the shopify bot.
+''' Unit tests for the shopify ATC bot.
     
     Tests different websites to check if bot is fully functional ''' 
 class TestShopifyATC(object):
