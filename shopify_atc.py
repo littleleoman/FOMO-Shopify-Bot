@@ -26,7 +26,8 @@ def get_sizes(url):
         else:
             page = bs4.BeautifulSoup(raw_HTML.text, 'lxml')
             print(page.title.string)
-            get_size_variant(url, page)
+            status = get_size_variant(url, page)
+            return status
     except requests.Timeout as error:
         print("There was a timeout error")
         print(str(error))
@@ -77,7 +78,8 @@ def get_size_variant(url, page):
     ''' remove unwanted information in beginning of list '''
     script.remove(script[0])
     script.remove(script[0])
-      
+    
+    status = True  
     for item in script:
         if 'public_title\":\"' in item:
             data = item
@@ -104,9 +106,11 @@ def get_size_variant(url, page):
                 
             item_size = item_size.replace('\\', '')
             item_size = item_size.replace('/', "")
-            print_link(url, item_size, str(retrieved_id))
+            status = print_link(url, item_size, str(retrieved_id))
+            if status == False:
+                break
             
-    return True
+    return status
 
 
 ''' Prints a correctly formated link which takes user straight to purchase.
@@ -121,12 +125,15 @@ def print_link(url, size, retrieved_id):
         return False
 
     print('[ ' + size +  ' ] \t',absolute_url + 'cart/' + retrieved_id + ':1')
+    return True
 
 ''' Kickstarts the entire script.
 
     @param url: The url pointing to the item which the user wants to buy '''
 def run(url):
-    get_sizes(url)
+    status = get_sizes(url)
+    
+    return status
     
 def find_variant_script(scripts):  
     ''' Loops through all the scripts on page to find correct script containing size data 
