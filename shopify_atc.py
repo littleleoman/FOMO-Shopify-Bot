@@ -4,9 +4,36 @@
 '''
 import requests
 import bs4
-import re 
-# import random
-# import webbrowser
+import re
+import discord
+
+''' Create new Discord client to be used '''
+client = discord.Client()
+
+''' Methods triggered on client events '''
+# Triggered when a message is received. Includes every message seen on the server
+# aka Private messages, messages from the bot, etc.
+@client.event
+async def on_message(message):
+    # we do not want the bot to reply to itself
+    if message.author == client.user:
+        return
+
+    # Checks to see if messages starts with a special string
+    if message.content.startswith('!hello'):
+        msg = 'Hello {0.author.mention}'.format(message)
+        await client.send_message(message.channel, msg)
+    elif message.content.startswith('!bot'):
+        await client.send_message(message.channel, "In need of my services?")
+
+# Triggered when the client starts up.
+# Prints some client information
+@client.event
+async def on_ready():
+    print('Logged in as')
+    print(client.user.name)
+    print(client.user.id)
+    print('------')
 
 ''' Retrieves sizes for item in stock.
 
@@ -146,3 +173,4 @@ def find_variant_script(scripts):
             break
             
 
+client.run('NDY4MTE1OTQ1OTUzNTU4NTM4.Di0m6w.AnlrFjlx7V94DycrcPVGjtWm_nY')
