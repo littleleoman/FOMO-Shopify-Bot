@@ -5,42 +5,14 @@
 import requests
 import bs4
 import re
-import discord
 
-''' Create new Discord client to be used '''
-client = discord.Client()
 
-''' Methods triggered on client events '''
-# Triggered when a message is received. Includes every message seen on the server
-# aka Private messages, messages from the bot, etc.
-@client.event
-async def on_message(message):
-    # we do not want the bot to reply to itself
-    if message.author == client.user:
-        return
-
-    # Checks to see if messages starts with a special string
-    if message.content.startswith('!hello'):
-        msg = 'Hello {0.author.mention}'.format(message)
-        await client.send_message(message.channel, msg)
-    elif message.content.startswith('!bot'):
-        await client.send_message(message.channel, "In need of my services?")
-
-# Triggered when the client starts up.
-# Prints some client information
-@client.event
-async def on_ready():
-    print('Logged in as')
-    print(client.user.name)
-    print(client.user.id)
-    print('------')
+headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'}
 
 ''' Retrieves sizes for item in stock.
 
     @param url: The url passed by the user pointing to the item he/she wants ''' 
 def get_sizes(url):
-    headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'}
-
     # Ensure url starts with https:// in case url only contains www....
     url_formatting = re.match('https://', url)
     if url_formatting == None:
@@ -68,6 +40,7 @@ def get_sizes(url):
 ''' Retrieves only the absolute URL from passed in URL.
 
     @param url: The address passed in by the user '''
+    
 def get_absolute_url(url):
     absolute_url = re.match('https://', url)
     if absolute_url == None:
@@ -81,6 +54,32 @@ def get_absolute_url(url):
         absolute_url = absolute_url.group()
         return absolute_url
     
+''' Retrieves the thumbnail image for the item requested.
+    
+    @param page: HTML containing information to be scraped for image URL '''
+def get_thumbnail_image(page):
+    correct_image = None
+    img = page.find_all('img')
+    for i in img:
+        if 'products' in str(i):
+            correct_image = str(i)
+            break
+    
+    if correct_image == None:
+        print(None)
+    else:
+        item_image_url = re.search('cdn\.shopify.+\"', correct_image)
+        if item_image_url == None:
+            print("REGEX RETURNED NONE")
+        else:
+            item_image_url = item_image_url.group()
+            item_image_url = item_image_url.split(' ')
+            url = "https://"
+            url += item_image_url[0].replace('"','')
+            print(url)
+        
+                  
+
     
 ''' Retrieves the id associated to the item size (required to create a link). 
 
@@ -95,6 +94,8 @@ def get_size_variant(url, page):
     script_index = find_variant_script(scripts)
     
     script = scripts[script_index].getText()
+    get_thumbnail_image(page)
+    
     
     ''' split it in this manner to store items of script separated by a new line '''
     script = script.split(';')
@@ -151,7 +152,7 @@ def print_link(url, size, retrieved_id):
         print("An error has occured completing your request")
         return False
 
-    print('[ ' + size +  ' ] \t',absolute_url + 'cart/' + retrieved_id + ':1')
+    print('[ ' + size +  ' ] \t[ ATC ](', absolute_url + 'cart/' + retrieved_id + ':1)')
     return True
 
 ''' Kickstarts the entire script.
@@ -171,6 +172,36 @@ def find_variant_script(scripts):
         if "variants\":[{" in script.getText():
             return number
             break
+        
+def check_if_shopify(url):
+    # Ensure url starts with https:// in case url only contains www....
+    url_formatting = re.match('https://', url)
+    if url_formatting == None:
+        url = 'https://' + url
+    
+    print(url)
+    try:
+        raw_HTML = requests.get(url, headers=headers, timeout=5)
+        if raw_HTML.status_code != 200:
+            print("An error has occured completing your request")
+            return False
+        else:
+            page = bs4.BeautifulSoup(raw_HTML.text, 'lxml')
+            script = page.find_all('script')
+            for i in script:
+                if 'shopify' in str(i).lower():
+                    print(str(i))
+                    return True
+            return False
+    except requests.Timeout as error:
+        print("There was a timeout error")
+        print(str(error))
+    except requests.ConnectionError as error:
+        print("A connection error has occured. Make sure you are connected to the Internet. The details are below.\n")
+        print(str(error))
+    except requests.RequestException as error:
+        print("An error occured making the internet request.")
+        print(str(error))
             
 
-client.run('NDY4MTE1OTQ1OTUzNTU4NTM4.Di0m6w.AnlrFjlx7V94DycrcPVGjtWm_nY')
+check_if_shopify("www.kith.com")
